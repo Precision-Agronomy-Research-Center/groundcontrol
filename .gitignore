@@ -1,0 +1,48 @@
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*token*
+*secret*
+*password*
+*credential*
+**/.aws/
+**/.kube/
+
+# Python
+**/venv/
+**/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / builds
+node_modules/
+dist/
+build/
+.next/
+.cache/
+
+# Logs / runtime / db
+*.log
+logs/
+*.db
+*.sqlite
+*.sqlite3
+data/
+state/
+runtime/
+tmp/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
