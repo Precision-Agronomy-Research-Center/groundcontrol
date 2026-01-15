@@ -6,32 +6,53 @@
 *.p12
 *.pfx
 *.jks
+*.crt
+*.csr
+id_rsa
+id_ed25519
 *token*
 *secret*
 *password*
 *credential*
 **/.aws/
 **/.kube/
+*.kubeconfig
+*kubeconfig*
+service-account*.json
 
 # Python
-**/venv/
-**/.venv/
 __pycache__/
-*.pyc
+*.py[cod]
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-
-# Node / builds
-node_modules/
+.coverage
+htmlcov/
 dist/
 build/
-.next/
-.cache/
+*.egg-info/
 
-# Logs / runtime / db
-*.log
-logs/
+# Virtual environments (IMPORTANT)
+venv/
+.venv/
+env/
+**/venv/
+**/.venv/
+**/env/
+
+# Node / web
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.next/
+.out/
+.cache/
+dist/
+build/
+
+# DB / runtime / logs
 *.db
 *.sqlite
 *.sqlite3
@@ -39,10 +60,19 @@ data/
 state/
 runtime/
 tmp/
+*.log
+logs/
 
-# OS / editor
+# IaC state
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+
+# OS / editors
 .DS_Store
 Thumbs.db
-.idea/
 .vscode/
+.idea/
 *.swp
+*.swo
