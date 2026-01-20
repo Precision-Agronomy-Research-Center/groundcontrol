@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GroundControl | PostGIS Console + Live RTK</title>
+
+  <!-- Your new console styles (add these later as we split files) -->
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+
+<body>
+  <div class="app">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="brand-text">
+          <h1>GroundControl GIS Console</h1>
+          <div class="sub">PostGIS workflow UI + Live RTK feed</div>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Primary">
+        <button class="tab active" data-tab="projects">Projects</button>
+        <button class="tab" data-tab="data">Data</button>
+        <button class="tab" data-tab="sql">SQL</button>
+        <button class="tab" data-tab="analysis">Analysis</button>
+        <button class="tab" data-tab="raster">Raster</button>
+        <button class="tab" data-tab="topology">Topology</button>
+        <button class="tab" data-tab="jobs">Jobs</button>
+        <button class="tab" data-tab="docs">Docs</button>
+      </nav>
+
+      <div class="topright">
+        <!-- Keep your original "status" id so the RTK checker can replace it -->
+        <div class="pill" title="Live RTK WebSocket status">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="status">Connecting…</span>
+        </div>
+
+        <div class="search" role="search">
+          <span class="muted">🔍</span>
+          <input id="globalSearch" type="text" placeholder="Search tables, functions, queries..." />
+        </div>
+
+        <button class="iconbtn" title="Settings">⚙</button>
+        <button class="iconbtn" title="Profile">👤</button>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <div class="main">
+      <!-- Left: Catalog -->
+      <aside class="panel" aria-label="Catalog">
+        <div class="panel-header">
+          <div class="panel-title">Catalog</div>
+          <span class="badge" id="connBadge">prod-postgres</span>
+        </div>
+
+        <div class="panel-body">
+          <div class="tree">
+            <section class="section" data-section="connections">
+              <button type="button" class="section-toggle">
+                <span>Connections</span>
+                <span class="chev">▾</span>
+              </button>
+              <div class="content">
+                <div class="item active" data-kind="connection" data-name="prod-postgres">
+                  <span>• prod-postgres (PostGIS)</span>
+                  <span class="badge">OK</span>
+                </div>
+                <div class="item" data-kind="connection" data-name="staging-postgres">
+                  <span>• staging-postgres</span>
+                  <span class="badge">Mock</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" data-section="schemas">
+              <button type="button" class="section-toggle">
+                <span>Schemas</span>
+                <span class="chev">▾</span>
+              </button>
+              <div class="content">
+                <div class="item" data-kind="schema" data-name="public"><span>▸ public</span><span class="badge">3</span></div>
+                <div class="item" data-kind="schema" data-name="cadastre"><span>▸ cadastre</span><span class="badge">1</span></div>
+                <div class="item" data-kind="schema" data-name="lidar"><span>▸ lidar</span><span class="badge">1</span></div>
+              </div>
+            </section>
+
+            <section class="section" data-section="tables">
+              <button type="button" class="section-toggle">
+                <span>Tables / Views</span>
+                <span class="chev">▾</span>
+              </button>
+              <div class="content" id="tableList">
+                <div class="item active" data-kind="table" data-name="cadastre.parcels"><span>▸ cadastre.parcels</span><span class="badge">geom</span></div>
+                <div class="item" data-kind="table" data-name="public.roads"><span>▸ public.roads</span><span class="badge">geom</span></div>
+                <div class="item" data-kind="table" data-name="public.buildings"><span>▸ public.buildings</span><span class="badge">geom</span></div>
+                <div class="item" data-kind="table" data-name="lidar.dem_raster"><span>▸ lidar.dem_raster</span><span class="badge">raster</span></div>
+              </div>
+            </section>
+
+            <section class="section" data-section="quick">
+              <button type="button" class="section-toggle">
+                <span>Quick Actions</span>
+                <span class="chev">▾</span>
+              </button>
+              <div class="content">
+                <div class="item" data-kind="action" data-name="create_index">
+                  <span>Create spatial index (GiST)</span>
+                  <span class="badge">SQL</span>
+                </div>
+                <div class="item" data-kind="action" data-name="analyze">
+                  <span>ANALYZE selected table</span>
+                  <span class="badge">Stats</span>
+                </div>
+                <div class="item" data-kind="action" data-name="vacuum">
+                  <span>VACUUM (mock)</span>
+                  <span class="badge">Maint</span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center: Map + Results -->
+      <main class="center" aria-label="Workspace">
+        <section class="map-wrap" aria-label="Map">
+          <div class="map-header">
+            <div class="left">
+              <div class="select">
+                <span class="muted">Basemap</span>
+                <select aria-label="Basemap" id="basemapSelect">
+                  <option selected>Light</option>
+                  <option>Dark</option>
+                  <option>Satellite</option>
+                  <option>None</option>
+                </select>
+              </div>
+
+              <div class="select">
+                <span class="muted">CRS</span>
+                <select aria-label="CRS" id="crsSelect">
+                  <option selected>EPSG:3857</option>
+                  <option>EPSG:4326</option>
+                  <option>EPSG:26916</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="right">
+              <div class="tools" aria-label="Map tools">
+                <button class="tool active" title="Select" data-tool="select">⬚</button>
+                <button class="tool" title="Point" data-tool="point">⬤</button>
+                <button class="tool" title="Line" data-tool="line">║</button>
+                <button class="tool" title="Polygon" data-tool="poly">⬠</button>
+                <button class="tool" title="Measure" data-tool="measure">⟂</button>
+              </div>
+              <button class="iconbtn" id="btnZoomTo" title="Zoom to selection">⌖</button>
+            </div>
+          </div>
+
+          <div class="map-canvas">
+            <div class="map-viewport" id="mapViewport" role="img" aria-label="Mock map viewport">
+              <div class="map-hint" id="mapHint">
+                <b>Mock Map</b><br/>
+                Live RTK is on the right. Select rows below to update the inspector.
+              </div>
+            </div>
+
+            <div class="layers" aria-label="Layers">
+              <div class="head">
+                <div class="title">Layers</div>
+                <button class="iconbtn" title="Add layer (mock)">＋</button>
+              </div>
+
+              <div class="list" id="layerList">
+                <div class="layer">
+                  <label><input type="checkbox" checked data-layer="parcels" /> parcels</label>
+                  <div class="mini"><span class="chip">polygon</span><span class="chip">cadastre</span></div>
+                </div>
+                <div class="layer">
+                  <label><input type="checkbox" checked data-layer="roads" /> roads</label>
+                  <div class="mini"><span class="chip">line</span><span class="chip">public</span></div>
+                </div>
+                <div class="layer">
+                  <label><input type="checkbox" checked data-layer="buildings" /> buildings</label>
+                  <div class="mini"><span class="chip">polygon</span><span class="chip">public</span></div>
+                </div>
+                <div class="layer">
+                  <label><input type="checkbox" data-layer="flood" /> flood_zones</label>
+                  <div class="mini"><span class="chip">polygon</span><span class="chip">public</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="results" aria-label="Results">
+          <div class="results-header">
+            <div class="panel-title">Results</div>
+            <div class="meta" id="resultsMeta">
+              <span>rows: <b id="rowsCount">0</b></span>
+              <span>time: <b id="queryTime">0 ms</b></span>
+              <span>source: <b id="sourceName">cadastre.parcels</b></span>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="resultsTable" aria-label="Results table">
+              <thead>
+                <tr>
+                  <th>id</th>
+                  <th>name</th>
+                  <th>area_ha</th>
+                  <th>srid</th>
+                  <th>valid</th>
+                </tr>
+              </thead>
+              <tbody><!-- filled by app.js later --></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <!-- Right: Live RTK + Inspector -->
+      <aside class="panel" aria-label="Right panel">
+        <div class="panel-header">
+          <div class="panel-title">Live RTK</div>
+          <span class="badge">/ws/rtk_view</span>
+        </div>
+
+        <div class="panel-body">
+          <!-- These IDs match your existing RTK checker -->
+          <div class="grid rtk-grid">
+            <div class="card">
+              <div class="label">Latitude</div>
+              <div class="value" id="lat">—</div>
+            </div>
+
+            <div class="card">
+              <div class="label">Longitude</div>
+              <div class="value" id="lon">—</div>
+            </div>
+
+            <div class="card">
+              <div class="label">Altitude (m)</div>
+              <div class="value" id="alt">—</div>
+            </div>
+
+            <div class="card">
+              <div class="label">Fix Type</div>
+              <div class="value" id="fix">—</div>
+            </div>
+
+            <div class="card">
+              <div class="label">Satellites</div>
+              <div class="value" id="sats">—</div>
+            </div>
+
+            <div class="card">
+              <div class="label">Timestamp (ms)</div>
+              <div class="value mono" id="tms">—</div>
+            </div>
+          </div>
+
+          <div id="log" class="rtk-log"></div>
+
+          <div class="hr"></div>
+
+          <!-- Keep the inspector below (we’ll wire it later) -->
+          <div class="panel-title" style="margin-bottom:10px;">Inspect</div>
+          <div class="kv" id="inspectorKV">
+            <div class="k">ID</div><div class="v" id="insId">–</div>
+            <div class="k">Table</div><div class="v" id="insTable">cadastre.parcels</div>
+            <div class="k">Geom</div><div class="v" id="insGeom">–</div>
+            <div class="k">Area</div><div class="v" id="insArea">–</div>
+            <div class="k">Valid</div><div class="v" id="insValid">–</div>
+            <div class="k">SRID</div><div class="v" id="insSrid">–</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Bottom Dock (placeholder for later file split) -->
+    <section class="dock" aria-label="SQL and capabilities">
+      <div class="sql" aria-label="SQL editor">
+        <div class="sqlbar">
+          <div class="left">SQL Editor (PostGIS)</div>
+          <div class="actions">
+            <button class="act primary" id="btnRun">Run</button>
+            <button class="act" id="btnExplain">Explain</button>
+            <button class="act" id="btnFormat">Format</button>
+            <button class="act" id="btnSave">Save</button>
+            <button class="act" id="btnSchedule">Schedule</button>
+          </div>
+        </div>
+        <textarea id="sqlEditor" spellcheck="false">
+-- Mock SQL for now. Real PostGIS integration later.
+SELECT * FROM cadastre.parcels LIMIT 25;
+        </textarea>
+      </div>
+
+      <div class="caps" aria-label="Capability templates">
+        <div class="head">
+          <div class="title">Capability Templates</div>
+          <span class="badge">Mock</span>
+        </div>
+        <div class="body">
+          <div class="cap">
+            <div class="name"><span>Spatial predicates</span><span class="badge">Intersects</span></div>
+            <div class="desc">Filter by spatial relationship.</div>
+            <code>WHERE ST_Intersects(a.geom, b.geom)</code>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Optional: later we’ll split these into js/*.js -->
+  <!-- <script defer src="js/state.js"></script>
+  <script defer src="js/mockData.js"></script>
+  <script defer src="js/ui.js"></script>
+  <script defer src="js/app.js"></script> -->
+
+  <!-- LIVE RTK (your existing PostGIS checker logic, embedded) -->
+  <script>
+    const statusEl = document.getElementById("status");
+    const logEl = document.getElementById("log");
+
+    const el = (id) => document.getElementById(id);
+
+    function log(msg) {
+      if (!logEl) return;
+      logEl.textContent += msg + "\n";
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    const wsProto = location.protocol === "https:" ? "wss" : "ws";
+    const wsUrl = `${wsProto}://${location.host}/ws/rtk_view`;
+
+    let ws;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (e) {
+      if (statusEl) {
+        statusEl.textContent = "WebSocket failed";
+        statusEl.style.color = "red";
+      }
+    }
+
+    if (ws) {
+      ws.onopen = () => {
+        if (statusEl) {
+          statusEl.textContent = "Connected";
+          statusEl.style.color = "";
+        }
+        log(`[WS OPEN] ${wsUrl}`);
+      };
+
+      ws.onclose = () => {
+        if (statusEl) {
+          statusEl.textContent = "Disconnected";
+          statusEl.style.color = "red";
+        }
+        log("[WS CLOSE]");
+      };
+
+      ws.onerror = () => {
+        if (statusEl) {
+          statusEl.textContent = "Error";
+          statusEl.style.color = "red";
+        }
+        log("[WS ERROR]");
+      };
+
+      ws.onmessage = (evt) => {
+        let msg;
+        try {
+          msg = JSON.parse(evt.data);
+        } catch {
+          return;
+        }
+        if (msg.type !== "fix") return;
+
+        const d = msg.data;
+        if (!d) return;
+
+        // These IDs are exactly your original UI
+        if (typeof d.lat === "number")  el("lat").textContent  = d.lat.toFixed(8);
+        if (typeof d.lon === "number")  el("lon").textContent  = d.lon.toFixed(8);
+        if (typeof d.alt_m === "number") el("alt").textContent = d.alt_m.toFixed(3);
+        if (d.fix != null)  el("fix").textContent  = String(d.fix);
+        if (d.sats != null) el("sats").textContent = String(d.sats);
+        if (d.t_ms != null) el("tms").textContent  = String(d.t_ms);
+
+        if (d.t_ms != null && typeof d.lat === "number" && typeof d.lon === "number") {
+          log(`[${new Date(d.t_ms).toISOString()}] lat=${d.lat}, lon=${d.lon}`);
+        }
+      };
+    }
+  </script>
+</body>
+</html>

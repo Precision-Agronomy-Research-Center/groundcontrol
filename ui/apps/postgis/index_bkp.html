@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GroundControl | PostGIS</title>
+  <style>
+    body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#f7f7f7}
+    header{padding:24px 28px;background:#fff;border-bottom:1px solid #e8e8e8}
+    main{padding:28px;max-width:980px}
+    .card{background:#fff;border-radius:12px;padding:18px;margin:14px 0;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+    pre{background:#111;color:#0f0;padding:12px;border-radius:10px;overflow:auto}
+    a{color:#0a66ff;text-decoration:none;font-weight:600}
+    .muted{color:#666}
+    button{padding:10px 14px;border-radius:10px;border:0;background:#0a66ff;color:#fff;font-weight:700;cursor:pointer}
+  </style>
+</head>
+<body>
+<header>
+  <div class="muted"><a href="/">← GroundControl</a></div>
+  <h2 style="margin:8px 0 0 0;">PostGIS</h2>
+  <div class="muted">Health + sample spatial queries</div>
+</header>
+
+<main>
+  <div class="card">
+    <button id="btn">Run health check</button>
+    <pre id="out">Click the button to query /api/health</pre>
+  </div>
+
+  <div class="card muted">
+    This page expects nginx to proxy <code>/api/</code> to your backend (Flask/Gunicorn).
+  </div>
+</main>
+
+<script>
+async function run() {
+  const out = document.getElementById('out');
+  out.textContent = 'Loading...';
+  try {
+    const r = await fetch('/api/health');
+    const j = await r.json();
+    out.textContent = JSON.stringify(j, null, 2);
+  } catch (e) {
+    out.textContent = 'Error: ' + e;
+  }
+}
+document.getElementById('btn').addEventListener('click', run);
+</script>
+</body>
+</html>

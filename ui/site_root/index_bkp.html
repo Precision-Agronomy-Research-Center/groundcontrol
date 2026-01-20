@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GroundControl</title>
+  <style>
+    body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#f7f7f7}
+    header{padding:24px 28px;background:#fff;border-bottom:1px solid #e8e8e8}
+    h1{margin:0;font-size:28px}
+    main{padding:28px;max-width:980px}
+    .card{background:#fff;border-radius:12px;padding:18px 18px;margin:14px 0;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+    a{color:#0a66ff;text-decoration:none;font-weight:600}
+    .muted{color:#666}
+    code{background:#f2f2f2;padding:2px 6px;border-radius:6px}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Precision Agronomy Research Center</h1>
+  <div class="muted">Ground Control: Agricultural landscaping decision support</div>
+</header>
+
+<main>
+  <div class="card">
+    <div><a href="/RTK/">Live RTK</a></div>
+    <div class="muted">Realtime RTK fix viewer (websocket)</div>
+  </div>
+
+  <div class="card">
+    <div><a href="/PostGIS/">PostGIS</a></div>
+    <div class="muted">Database health, spatial queries, and data products</div>
+  </div>
+
+  <div class="card muted">
+    Tip: this site is served by nginx; each section maps to its owning repo via nginx <code>alias</code>.
+  </div>
+</main>
+</body>
+</html>

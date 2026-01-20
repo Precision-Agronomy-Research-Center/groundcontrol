@@ -1,0 +1,38 @@
+<h2>Live RTK</h2>
+<div id="status">Connecting…</div>
+<pre id="out"></pre>
+
+<script>
+const statusEl = document.getElementById("status");
+const outEl = document.getElementById("out");
+
+const ws = new WebSocket("wss://groundcontrol.parccommons.org/ws/rtk_view");
+
+ws.onopen = () => {
+  statusEl.textContent = "Connected. Waiting for RTK…";
+  // keepalive ping so server handler doesn't exit
+  setInterval(() => { try { ws.send("ping"); } catch(e) {} }, 15000);
+};
+
+ws.onmessage = (e) => {
+  const d = JSON.parse(e.data);
+  if (d.type === "GGA") {
+    statusEl.textContent = `${d.fix} | sats=${d.sats} | hdop=${d.hdop}`;
+    outEl.textContent =
+`lat: ${d.lat}
+lon: ${d.lon}
+alt_m: ${d.alt_m}
+fix: ${d.fix} (qual ${d.fixq})
+sats: ${d.sats}
+hdop: ${d.hdop}
+
+raw:
+${d.raw}`;
+  } else {
+    outEl.textContent = e.data;
+  }
+};
+
+ws.onerror = () => statusEl.textContent = "WebSocket error";
+ws.onclose = () => statusEl.textContent = "Disconnected";
+</script>

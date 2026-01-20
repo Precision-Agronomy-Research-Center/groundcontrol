@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>GroundControl | PostGIS</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700|Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://parccommons.org/css/slides.css">
+  <link rel="stylesheet" href="https://parccommons.org/css/index_custom.css">
+
+  <link rel="stylesheet" href="/PostGIS/vendor/leaflet/leaflet.css">
+  <script src="/PostGIS/vendor/leaflet/leaflet.js"></script>
+
+  <style>
+    .gc-wrap { padding: 18px 0 30px 0; }
+    .gc-sub { margin: 6px 0 0 0; opacity: .85; }
+
+    .console {
+      margin-top: 18px;
+      background: rgba(255,255,255,0.92);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+    }
+
+    .console-grid{
+      display:grid;
+      grid-template-columns: 320px 1fr 360px;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .panel{
+      background:#fff;
+      border:1px solid rgba(0,0,0,0.08);
+      border-radius:10px;
+      overflow:hidden;
+    }
+    .panel-h{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(0,0,0,0.08);
+      background: rgba(0,0,0,0.02);
+      font-weight:700;
+    }
+    .panel-b{
+      padding: 10px 12px;
+      min-width: 0; /* IMPORTANT: prevent grid overflow sizing bugs */
+    }
+
+    .badge{
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(137,105,0,0.10);
+      border: 1px solid rgba(137,105,0,0.18);
+      font-weight: 600;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:8px 10px;
+      border-radius:8px;
+      cursor:pointer;
+      user-select: none;
+    }
+    .row:hover{ background: rgba(0,0,0,0.04); }
+    .row.active{
+      background: rgba(137,105,0,0.10);
+      outline: 1px solid rgba(137,105,0,0.20);
+    }
+
+    .toolbar{
+      display:flex;
+      gap:8px;
+      flex-wrap: wrap;
+      align-items:center;
+      margin-bottom: 10px;
+    }
+
+    .btn{
+      display:inline-block;
+      border:1px solid rgba(0,0,0,0.14);
+      background: rgba(0,0,0,0.02);
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor:pointer;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .btn.primary{
+      background: rgba(137,105,0,0.12);
+      border-color: rgba(137,105,0,0.25);
+    }
+    .input{
+      width:100%;
+      border:1px solid rgba(0,0,0,0.12);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      background:#fff;
+    }
+
+    .kpi{
+      display:flex;
+      gap:12px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      opacity:.85;
+      margin-top: 10px;
+    }
+
+    /* --- Map: stable container + Leaflet robustness --- */
+    .mapShell{
+      border-radius: 10px;
+      border:1px solid rgba(0,0,0,0.10);
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, rgba(0,0,0,.05) 1px, transparent 1px) 0 0/26px 26px,
+        linear-gradient(0deg, rgba(0,0,0,.05) 1px, transparent 1px) 0 0/26px 26px,
+        linear-gradient(180deg, rgba(137,105,0,0.06), rgba(0,0,0,0.02));
+      width: 100%;
+    }
+
+    /* Deterministic box so Leaflet can fill it */
+    .mapShell { height: 520px; }
+    #map { height: 100%; width: 100%; display:block; }
+
+    /* Leaflet internal stability */
+    .leaflet-container { background: #f7f7f7; outline: 0; }
+    .leaflet-tile-pane { background: #f7f7f7; }
+    .leaflet-tile { image-rendering: auto; }
+
+    /* Right panel RTK + Inspector */
+    .rtkgrid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:10px;
+    }
+    .card{
+      border:1px solid rgba(0,0,0,0.08);
+      border-radius:10px;
+      padding:10px;
+      background:#fff;
+    }
+    .label{ font-size: 12px; opacity:.7; }
+    .value{ font-weight:700; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; }
+    #log{
+      margin-top: 10px;
+      background:#111;
+      color:#0f0;
+      padding:10px;
+      border-radius:10px;
+      height: 140px;
+      overflow:auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+    }
+
+/* Leaflet + CSS framework compatibility.
+   Prevent global responsive image rules from breaking tile layout. */
+.leaflet-container img {
+  max-width: none !important;
+  max-height: none !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Ensure Leaflet tiles remain absolute-positioned 256px tiles */
+.leaflet-tile {
+  position: absolute !important;
+  width: 256px !important;
+  height: 256px !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* Keep panes from inheriting weird layout behaviors */
+.leaflet-pane,
+.leaflet-tile-pane,
+.leaflet-map-pane {
+  position: absolute !important;
+}
+    .drawer{
+      border-top:1px solid rgba(0,0,0,0.08);
+      margin-top: 10px;
+      padding-top: 10px;
+      display:none;
+    }
+    .drawer.open{ display:block; }
+
+    .sqlbox{
+      width:100%;
+      min-height: 160px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12.5px;
+      border:1px solid rgba(0,0,0,0.12);
+      border-radius: 10px;
+      padding: 10px;
+      resize: vertical;
+      background:#fcfcfc;
+    }
+
+    @media (max-width: 1080px){
+      .console-grid{ grid-template-columns: 1fr; }
+      .mapShell{ height: 360px; }
+    }
+  </style>
+</head>
+
+<body class="slides horizontal simplifiedMobile animated">
+
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
+    <symbol id="logo" viewBox="-50 -10 300 120" preserveAspectRatio="xMidYMid meet">
+      <rect x="0" y="20" width="200" height="70" fill="#896900" rx="4" />
+      <text x="20" y="72" fill="#fff" font-family="Baskerville, 'Baskerville Old Face', serif" font-weight="700" font-size="48">
+        P A R C
+      </text>
+    </symbol>
+  </svg>
+
+  <header class="banner">
+    <div class="banner-inner">
+      <a href="https://parccommons.org" class="logo-link" aria-label="PARC Home">
+        <svg class="banner-logo"><use xlink:href="#logo"></use></svg>
+      </a>
+      <nav class="nav-links">
+        <a href="/">GroundControl</a>
+        <a href="/RTK/">Live RTK</a>
+        <a href="/PostGIS/">PostGIS</a>
+        <a href="/public/">Public</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="slide hero-banner fade-6 kenBurns">
+    <div class="background" style="background-image:url('https://parccommons.org/assets/img/background/PARC_narrow.jpg')"></div>
+    <div class="overlay">
+      <div class="block">
+        <h1 style="text-align:left;margin-top:5%;">PostGIS<br></h1>
+      </div>
+      <h3 style="text-align:left;"><i>Map-first: choose a layer, pan/zoom, features load for the current view</i></h3>
+    </div>
+  </section>
+
+  <section class="carousel-banner">
+    <div class="container gc-wrap">
+      <h3 class="section-title">PostGIS Explorer</h3>
+      <p class="gc-sub">Choose a layer. Pan and zoom. Features load automatically for the current map view.</p>
+
+      <div class="console">
+        <div class="console-grid">
+
+          <!-- Left: Layers -->
+          <div class="panel">
+            <div class="panel-h">
+              <div>Layers</div>
+              <span class="badge" id="layersBadge">0</span>
+            </div>
+            <div class="panel-b">
+              <div class="toolbar">
+                <input id="layerSearch" class="input" placeholder="Search layers (schema.table)" />
+              </div>
+
+              <div id="layersHost">
+                <div style="opacity:.7;">Loading catalog…</div>
+              </div>
+
+              <div class="kpi">
+                <div>active: <b id="activeLayerLabel">—</b></div>
+                <div>features: <b id="featureCount">0</b></div>
+                <div>load: <b id="loadMs">0 ms</b></div>
+              </div>
+
+              <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn" id="btnReload">Reload</button>
+                <button class="btn" id="btnClear">Clear</button>
+                <button class="btn" id="btnAdvanced">Advanced</button>
+              </div>
+
+              <div id="advancedDrawer" class="drawer">
+                <div style="font-weight:700; margin-bottom:6px;">Advanced SQL</div>
+                <div style="font-size:12px; opacity:.8; margin-bottom:8px;">
+                  For debugging and power use. Normal operation does not require writing SQL.
+                </div>
+                <textarea class="sqlbox" id="sqlEditor" spellcheck="false"></textarea>
+                <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                  <button class="btn primary" id="btnRunSql">Run SQL</button>
+                  <button class="btn" id="btnFillViewportSql">Load Active Layer in View</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Center: Map -->
+          <div class="panel">
+            <div class="panel-h">
+              <div>Map</div>
+              <span class="badge" id="srcBadge">viewport</span>
+            </div>
+            <div class="panel-b">
+              <div class="mapShell">
+                <div id="map"></div>
+              </div>
+              <div style="margin-top:10px; font-size:12px; opacity:.8;">
+                Tip: move the map to refresh. Click a feature to populate Inspector.
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: RTK + Inspector -->
+          <div class="panel">
+            <div class="panel-h">
+              <div>Live RTK + Inspector</div>
+              <span class="badge" id="status">Connecting…</span>
+            </div>
+            <div class="panel-b">
+
+              <div class="rtkgrid">
+                <div class="card"><div class="label">Latitude</div><div class="value" id="lat">—</div></div>
+                <div class="card"><div class="label">Longitude</div><div class="value" id="lon">—</div></div>
+                <div class="card"><div class="label">Altitude (m)</div><div class="value" id="alt">—</div></div>
+                <div class="card"><div class="label">Fix Type</div><div class="value" id="fix">—</div></div>
+                <div class="card"><div class="label">Satellites</div><div class="value" id="sats">—</div></div>
+                <div class="card"><div class="label">Timestamp (ms)</div><div class="value mono" id="tms">—</div></div>
+              </div>
+
+              <div id="log"></div>
+
+              <div style="margin-top:12px; font-weight:700;">Inspector</div>
+              <div style="border:1px solid rgba(0,0,0,0.08); border-radius:10px; padding:10px; margin-top:8px;">
+                <div style="display:flex; justify-content:space-between; gap:10px;"><div style="opacity:.7;">Layer</div><div id="insLayer">—</div></div>
+                <div style="display:flex; justify-content:space-between; gap:10px;"><div style="opacity:.7;">ID</div><div id="insId">—</div></div>
+                <div style="display:flex; justify-content:space-between; gap:10px;"><div style="opacity:.7;">Geom</div><div id="insGeom">—</div></div>
+                <div style="display:flex; justify-content:space-between; gap:10px;"><div style="opacity:.7;">Props</div><div id="insProps" class="mono" style="max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">—</div></div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="gc-note" style="margin-top:14px;">
+        Map-first UI. SQL is internal. Advanced SQL is optional.
+      </div>
+    </div>
+  </section>
+
+  <!-- Scripts (ONLY ONCE each) -->
+  <script src="js/map.js"></script>
+  <script src="js/postgis.js"></script>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      try {
+        if (window.GCPostgisApp && window.GCPostgisApp.init) {
+          await window.GCPostgisApp.init();
+        }
+        // Nudge Leaflet after DOM ready
+        setTimeout(() => window.GCMap && window.GCMap.stabilize(1200), 0);
+        setTimeout(() => window.GCMap && window.GCMap.stabilize(1200), 300);
+      } catch (e) {
+        alert(e.message);
+      }
+    });
+
+    // CRITICAL: full load happens after fonts/CSS/hero animations settle
+    window.addEventListener("load", () => {
+      if (!window.GCMap) return;
+      window.GCMap.stabilize(1500);
+      setTimeout(() => window.GCMap.stabilize(1500), 600);
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.GCMap) window.GCMap.stabilize(1200);
+    });
+
+    window.addEventListener("scroll", () => {
+      if (window.GCMap) window.GCMap.stabilize(400);
+    }, { passive: true });
+  </script>
+
+  <script>
+    // ---- Live RTK (existing websocket logic) ----
+    const statusEl = document.getElementById("status");
+    const logEl = document.getElementById("log");
+    const el = (id) => document.getElementById(id);
+
+    function log(msg) {
+      if (!logEl) return;
+      logEl.textContent += msg + "\n";
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    const wsProto = location.protocol === "https:" ? "wss" : "ws";
+    const wsUrl = `${wsProto}://${location.host}/ws/rtk_view`;
+
+    let ws;
+    try { ws = new WebSocket(wsUrl); } catch {}
+
+    if (ws) {
+      ws.onopen = () => {
+        if (statusEl) statusEl.textContent = "Connected";
+        log(`[WS OPEN] ${wsUrl}`);
+      };
+      ws.onclose = () => {
+        if (statusEl) statusEl.textContent = "Disconnected";
+        log("[WS CLOSE]");
+      };
+      ws.onerror = () => {
+        if (statusEl) statusEl.textContent = "Error";
+        log("[WS ERROR]");
+      };
+      ws.onmessage = (evt) => {
+        let msg;
+        try { msg = JSON.parse(evt.data); } catch { return; }
+        if (msg.type !== "fix") return;
+        const d = msg.data || {};
+
+        if (typeof d.lat === "number")  el("lat").textContent  = d.lat.toFixed(8);
+        if (typeof d.lon === "number")  el("lon").textContent  = d.lon.toFixed(8);
+        if (typeof d.alt_m === "number") el("alt").textContent = d.alt_m.toFixed(3);
+        if (d.fix != null)  el("fix").textContent  = String(d.fix);
+        if (d.sats != null) el("sats").textContent = String(d.sats);
+        if (d.t_ms != null) el("tms").textContent  = String(d.t_ms);
+
+        if (d.t_ms != null && typeof d.lat === "number" && typeof d.lon === "number") {
+          log(`[${new Date(d.t_ms).toISOString()}] lat=${d.lat}, lon=${d.lon}`);
+        }
+      };
+    } else {
+      if (statusEl) statusEl.textContent = "WebSocket failed";
+    }
+  </script>
+
+</body>
+</html>

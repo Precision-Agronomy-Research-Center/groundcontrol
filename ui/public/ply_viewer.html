@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>3D Point Cloud Viewer</title>
+<style>
+  body { margin:0; overflow:hidden; background:#111; font-family: sans-serif; }
+  #info { position:absolute; top:10px; left:10px; color:#fff; background:rgba(0,0,0,0.4); padding:8px 12px; border-radius:6px; }
+</style>
+</head>
+<body>
+<div id="info">Drag to rotate | Scroll to zoom</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.161.0/examples/js/loaders/PLYLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.161.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x111111);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.01, 5000);
+camera.position.set(0, 0, 2);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+const loader = new THREE.PLYLoader();
+loader.load('object_cloud.ply', function (geometry) {
+    geometry.computeVertexNormals();
+    const material = new THREE.PointsMaterial({
+        size: 0.005,
+        vertexColors: true
+    });
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+}, undefined, function(err){ console.error(err); });
+
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+</body>
+</html>

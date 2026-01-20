@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>GroundControl | PostGIS</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700|Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://parccommons.org/css/slides.css">
+  <link rel="stylesheet" href="https://parccommons.org/css/index_custom.css">
+
+  <link rel="stylesheet" href="/PostGIS/vendor/leaflet/leaflet.css">
+  <script src="/PostGIS/vendor/leaflet/leaflet.js"></script>
+
+  <style>
+    :root{
+      --gc-text: #111827;
+      --gc-muted: #4b5563;
+      --gc-border: rgba(0,0,0,0.14);
+      --gc-panel: #ffffff;
+      --gc-panel-h: #f9fafb;
+
+      --gc-gold-bg: rgba(137,105,0,0.12);
+      --gc-gold-br: rgba(137,105,0,0.28);
+      --gc-gold-tx: #5b4500;
+    }
+
+    body { color: var(--gc-text); }
+    .gc-wrap { padding: 12px 0 18px 0; }
+
+    .console {
+      margin-top: 10px;
+      background: rgba(255,255,255,0.96);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+    }
+
+    .console-grid{
+      display:grid;
+      grid-template-columns: 320px 1fr 360px;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .panel{
+      background: var(--gc-panel);
+      border: 1px solid var(--gc-border);
+      border-radius: 12px;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .panel-h{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--gc-border);
+      background: var(--gc-panel-h);
+      font-weight: 800;
+      color: var(--gc-text);
+    }
+
+    .panel-b{ padding: 10px 12px; }
+
+    .badge{
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--gc-gold-bg);
+      border: 1px solid var(--gc-gold-br);
+      color: var(--gc-gold-tx);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .mutedline{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 10px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--gc-muted);
+    }
+    .mutedline b{ color: var(--gc-text); font-weight: 800; }
+
+    /* Layers UI */
+    .input{
+      width:100%;
+      border:1px solid rgba(0,0,0,0.20);
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 13px;
+      background:#fff;
+      color: var(--gc-text);
+      outline: none;
+    }
+
+    #layersHost{
+      margin-top: 10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-height: 120px;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:10px 10px;
+      border-radius:10px;
+      border:1px solid rgba(0,0,0,0.10);
+      cursor:pointer;
+      user-select:none;
+      background:#fff;
+      color: var(--gc-text);
+    }
+    .row:hover{ background: rgba(0,0,0,0.03); }
+    .row.active{
+      background: rgba(137,105,0,0.16);
+      border-color: rgba(137,105,0,0.30);
+      font-weight: 800;
+    }
+
+    .btnrow{ display:flex; gap:8px; flex-wrap:wrap; margin-top: 12px; }
+
+    .btn{
+      border:1px solid rgba(0,0,0,0.22);
+      background:#fff;
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor:pointer;
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--gc-text);
+    }
+    .btn.primary{
+      background: var(--gc-gold-bg);
+      border-color: var(--gc-gold-br);
+      color: var(--gc-gold-tx);
+    }
+
+    /* Advanced drawer */
+    #advancedDrawer{ display:none; margin-top: 12px; }
+    #advancedDrawer.open{ display:block; }
+    .sqlbox{
+      width:100%;
+      min-height:160px;
+      border:1px solid rgba(0,0,0,0.20);
+      border-radius: 10px;
+      padding: 10px;
+      background:#fff;
+      color: var(--gc-text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+      resize: vertical;
+    }
+
+    /* Map */
+    .mapShell{
+      width:100%;
+      border-radius: 12px;
+      border:1px solid rgba(0,0,0,0.15);
+      overflow:hidden;
+      background:#f8fafc;
+
+      height: calc(100vh - 210px);
+      min-height: 520px;
+      max-height: 860px;
+    }
+    #map{ width:100%; height:100%; }
+
+    /* Leaflet patch fix (framework safe) */
+    .leaflet-container img{
+      max-width: none !important;
+      max-height: none !important;
+      width: auto !important;
+      height: auto !important;
+    }
+    .leaflet-tile{
+      position: absolute !important;
+      width: 256px !important;
+      height: 256px !important;
+      max-width: none !important;
+      max-height: none !important;
+    }
+
+    /* Right panel */
+    .rtkgrid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:10px;
+    }
+    .card{
+      border:1px solid rgba(0,0,0,0.12);
+      border-radius:10px;
+      padding:10px;
+      background:#fff;
+    }
+    .label{ font-size: 12px; color: var(--gc-muted); }
+    .value{ font-weight: 900; color: var(--gc-text); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; }
+
+    #log{
+      margin-top: 10px;
+      background:#0b0f14;
+      color:#00ff88;
+      padding:10px;
+      border-radius:10px;
+      height: 140px;
+      overflow:auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+    }
+
+    .inspector{
+      margin-top: 12px;
+      border:1px solid rgba(0,0,0,0.12);
+      border-radius: 10px;
+      padding: 10px;
+      background:#fff;
+    }
+    .kv{ display:flex; justify-content:space-between; gap:12px; padding:6px 0; }
+    .kv .k{ color: var(--gc-muted); }
+    .kv .v{
+      color: var(--gc-text);
+      font-weight: 800;
+      text-align:right;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      max-width: 240px;
+    }
+
+    @media (max-width: 1100px){
+      .console-grid{ grid-template-columns: 1fr; }
+      .mapShell{
+        height: calc(100vh - 260px);
+        min-height: 380px;
+      }
+      .kv .v{ max-width: 100%; }
+    }
+  </style>
+</head>
+
+<body class="slides horizontal simplifiedMobile animated">
+
+  <!-- PARC Logo symbol -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
+    <symbol id="logo" viewBox="-50 -10 300 120" preserveAspectRatio="xMidYMid meet">
+      <rect x="0" y="20" width="200" height="70" fill="#896900" rx="4" />
+      <text x="20" y="72" fill="#fff" font-family="Baskerville, 'Baskerville Old Face', serif" font-weight="700" font-size="48">
+        P A R C
+      </text>
+    </symbol>
+  </svg>
+
+  <!-- Header / Nav -->
+  <header class="banner">
+    <div class="banner-inner">
+      <a href="https://parccommons.org" class="logo-link" aria-label="PARC Home">
+        <svg class="banner-logo"><use xlink:href="#logo"></use></svg>
+      </a>
+      <nav class="nav-links">
+        <a href="/">GroundControl</a>
+        <a href="/RTK/">Live RTK</a>
+        <a href="/PostGIS/">PostGIS</a>
+        <a href="/public/">Public</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- App -->
+  <section class="carousel-banner">
+    <div class="container gc-wrap">
+      <div class="console">
+        <div class="console-grid">
+
+          <!-- Left: Layers -->
+          <div class="panel">
+            <div class="panel-h">
+              <div>Layers</div>
+              <span class="badge" id="layersBadge">0</span>
+            </div>
+            <div class="panel-b">
+              <input id="layerSearch" class="input" placeholder="Search layers (schema.table)" />
+
+              <div id="layersHost"></div>
+
+              <div class="btnrow">
+                <button class="btn" id="btnReload">Reload</button>
+                <button class="btn" id="btnClear">Clear</button>
+                <button class="btn primary" id="btnAdvanced">Advanced</button>
+              </div>
+
+              <div id="advancedDrawer">
+                <div style="margin-top:10px; font-weight:900; color:#111827;">Advanced SQL (optional)</div>
+                <textarea id="sqlEditor" class="sqlbox" spellcheck="false"></textarea>
+                <div class="btnrow">
+                  <button class="btn primary" id="btnRunSql">Run SQL</button>
+                  <button class="btn" id="btnFillViewportSql">Load Active Layer in View</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Center: Map -->
+          <div class="panel">
+            <div class="panel-h">
+              <div>Map</div>
+              <span class="badge" id="srcBadge">viewport</span>
+            </div>
+            <div class="panel-b">
+              <div class="mapShell">
+                <div id="map"></div>
+              </div>
+
+              <div class="mutedline">
+                <div>Active: <b id="activeLayerLabel">—</b></div>
+                <div>features: <b id="featureCount">0</b> · <span>time:</span> <b id="loadMs">0 ms</b></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: RTK + Inspector -->
+          <div class="panel">
+            <div class="panel-h">
+              <div>Live RTK + Inspector</div>
+              <span class="badge" id="status">Connecting…</span>
+            </div>
+
+            <div class="panel-b">
+              <div class="rtkgrid">
+                <div class="card"><div class="label">Latitude</div><div class="value" id="lat">—</div></div>
+                <div class="card"><div class="label">Longitude</div><div class="value" id="lon">—</div></div>
+                <div class="card"><div class="label">Altitude (m)</div><div class="value" id="alt">—</div></div>
+                <div class="card"><div class="label">Fix Type</div><div class="value" id="fix">—</div></div>
+                <div class="card"><div class="label">Satellites</div><div class="value" id="sats">—</div></div>
+                <div class="card"><div class="label">Timestamp (ms)</div><div class="value mono" id="tms">—</div></div>
+              </div>
+
+              <div id="log"></div>
+
+              <div class="inspector">
+                <div class="kv"><div class="k">ID</div><div class="v" id="insId">—</div></div>
+                <div class="kv"><div class="k">Layer</div><div class="v" id="insLayer">—</div></div>
+                <div class="kv"><div class="k">Geom</div><div class="v" id="insGeom">—</div></div>
+                <div class="kv"><div class="k">Props</div><div class="v" id="insProps">—</div></div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- App scripts -->
+  <script src="js/map.js"></script>
+  <script src="js/postgis.js"></script>
+  <script src="js/catalog.js"></script>
+
+  <!-- Init: call your app init -->
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      try {
+        await window.GCPostgisApp.init();
+      } catch (e) {
+        alert(e.message || String(e));
+      }
+    });
+  </script>
+
+  <!-- Live RTK websocket -->
+  <script>
+    const statusEl = document.getElementById("status");
+    const logEl = document.getElementById("log");
+    const el = (id) => document.getElementById(id);
+
+    function log(msg) {
+      if (!logEl) return;
+      logEl.textContent += msg + "\n";
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    const wsProto = location.protocol === "https:" ? "wss" : "ws";
+    const wsUrl = `${wsProto}://${location.host}/ws/rtk_view`;
+
+    let ws;
+    try { ws = new WebSocket(wsUrl); } catch {}
+
+    if (ws) {
+      ws.onopen = () => { if (statusEl) statusEl.textContent = "Connected"; log(`[WS OPEN] ${wsUrl}`); };
+      ws.onclose = () => { if (statusEl) statusEl.textContent = "Disconnected"; log("[WS CLOSE]"); };
+      ws.onerror = () => { if (statusEl) statusEl.textContent = "Error"; log("[WS ERROR]"); };
+      ws.onmessage = (evt) => {
+        let msg;
+        try { msg = JSON.parse(evt.data); } catch { return; }
+        if (msg.type !== "fix") return;
+        const d = msg.data || {};
+
+        if (typeof d.lat === "number") el("lat").textContent = d.lat.toFixed(8);
+        if (typeof d.lon === "number") el("lon").textContent = d.lon.toFixed(8);
+        if (typeof d.alt_m === "number") el("alt").textContent = d.alt_m.toFixed(3);
+        if (d.fix != null) el("fix").textContent = String(d.fix);
+        if (d.sats != null) el("sats").textContent = String(d.sats);
+        if (d.t_ms != null) el("tms").textContent = String(d.t_ms);
+
+        if (d.t_ms != null && typeof d.lat === "number" && typeof d.lon === "number") {
+          log(`[${new Date(d.t_ms).toISOString()}] lat=${d.lat}, lon=${d.lon}`);
+        }
+      };
+    } else {
+      if (statusEl) statusEl.textContent = "WebSocket failed";
+    }
+  </script>
+
+</body>
+</html>
