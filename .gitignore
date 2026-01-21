@@ -1,78 +1,62 @@
-# Secrets
+# Secrets / env
 .env
 .env.*
+*.secret
 *.pem
 *.key
 *.p12
-*.pfx
-*.jks
 *.crt
-*.csr
-id_rsa
-id_ed25519
+secrets/
+**/secrets/
+config.local.*
+config.prod.*
+*credentials*
 *token*
-*secret*
-*password*
-*credential*
-**/.aws/
-**/.kube/
-*.kubeconfig
-*kubeconfig*
-service-account*.json
+*apikey*
 
-# Python
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
-dist/
-build/
-*.egg-info/
-
-# Virtual environments (IMPORTANT)
-venv/
-.venv/
-env/
-**/venv/
-**/.venv/
-**/env/
-
-# Node / web
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-.next/
-.out/
-.cache/
-dist/
-build/
-
-# DB / runtime / logs
-*.db
+# Databases / Postgres / PostGIS
+pgdata/
+postgres-data/
+postgis-data/
+*.sql.gz
+*.dump
+*.backup
+*.bak
 *.sqlite
 *.sqlite3
+*.db
+
+# User content / imports
+uploads/
 data/
-state/
-runtime/
-tmp/
-*.log
+datasets/
+tiles/
+rasters/
+imports/
+*.geojson
+*.gpkg
+*.tif
+*.tiff
+*.las
+*.laz
+*.mbtiles
+
+# Logs / runtime
 logs/
+*.log
+tmp/
+cache/
+__pycache__/
+*.pyc
 
-# IaC state
-.terraform/
-*.tfstate
-*.tfstate.*
-terraform.tfvars
+# Python / Node
+venv/
+.venv/
+node_modules/
+dist/
+build/
 
-# OS / editors
+# OS/editor
 .DS_Store
 Thumbs.db
-.vscode/
-.idea/
-*.swp
-*.swo
+.idea

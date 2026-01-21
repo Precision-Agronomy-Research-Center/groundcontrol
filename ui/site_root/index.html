@@ -2,156 +2,358 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GroundControl | PARC</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>PARC | GroundControl</title>
 
   <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700|Material+Icons" rel="stylesheet">
-  <!-- Pull the exact same CSS the main site uses -->
   <link rel="stylesheet" href="https://parccommons.org/css/slides.css">
   <link rel="stylesheet" href="https://parccommons.org/css/index_custom.css">
 
   <style>
-    /* Keep local CSS minimal so PARC styles win */
-    .gc-subtitle { text-align:center; margin-top:-1%; }
-    .gc-note {
-      margin-top: 24px;
-      font-size: 14px;
-      opacity: 0.85;
+    :root{
+      --gc-green: rgba(44,110,46,0.88);
+      --gc-green-2: rgba(44,110,46,0.72);
+      --gc-shadow: 0 18px 45px rgba(0,0,0,0.28);
+      --gc-radius: 18px;
+      --gc-footer: #d7e8dc;
+      --gc-footer-text: rgba(0,0,0,0.72);
+      --gc-gold: #8a6b0a;
+    }
+
+    body { margin: 0; }
+    .gc-page{ min-height: 100vh; background: #cfe2d3; display:flex; flex-direction:column; }
+
+    /* Top bar */
+    .gc-topbar{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      background: rgba(20,24,20,0.78);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .gc-brand{ display:flex; align-items:center; text-decoration:none; }
+    .gc-brand-badge{
+      background: #896900;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 4px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      font-family: Roboto, sans-serif;
+    }
+    .gc-nav{ display:flex; gap:18px; align-items:center; font-weight:500; }
+    .gc-nav a{ color: rgba(255,255,255,0.92); text-decoration:none; padding:8px 8px; border-radius:10px; }
+    .gc-nav a:hover{ background: rgba(255,255,255,0.08); }
+
+    /* HERO */
+    .gc-hero{
+      position: relative;
+      width: 100%;
+      min-height: clamp(420px, 70vh, 760px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #0c120d;
+    }
+    .gc-hero::before{
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: url("/groundcontrol_backsplash.png");
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      transform: scale(1.02);
+      filter: saturate(1.05) contrast(1.05);
+    }
+    .gc-hero::after{
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(900px 520px at 70% 45%, rgba(0,0,0,0.05), rgba(0,0,0,0.52)),
+        linear-gradient(to bottom, rgba(0,0,0,0.12), rgba(0,0,0,0.55));
+    }
+
+    .gc-hero-inner{
+      position: relative;
+      z-index: 2;
+      width: min(1200px, calc(100% - 44px));
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 26px;
+      align-items: center;
+      padding: 34px 0;
+    }
+
+    /* Left copy (What / Why / For) */
+    .gc-hero-left{
+      color: rgba(255,255,255,0.92);
+      max-width: 640px;
+    }
+
+    .gc-hero-left h1{
+      margin: 0 0 10px 0;
+      font-size: clamp(38px, 4.5vw, 68px);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      text-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+
+    .gc-hero-left .gc-subtitle{
+      margin: 0 0 18px 0;
+      font-size: clamp(16px, 1.6vw, 22px);
+      font-weight: 300;
+      line-height: 1.35;
+      text-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    }
+
+    .gc-points{
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+      font-size: 15.5px;
+      line-height: 1.35;
+    }
+
+    .gc-point{
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .gc-k{
+      opacity: 0.95;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .gc-v{
+      opacity: 0.94;
+    }
+
+    .gc-v em{
+      font-style: normal;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    /* Right CTA card */
+    .gc-hero-card{
+      justify-self: end;
+      width: min(560px, 100%);
+      border-radius: var(--gc-radius);
+      box-shadow: var(--gc-shadow);
+      overflow: hidden;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(6px);
+    }
+    .gc-hero-card-top{
+      padding: 18px 18px 14px 18px;
+      background: var(--gc-green);
+      color: #fff;
       text-align: center;
     }
-    .gc-note code{
-      background: rgba(0,0,0,0.08);
-      padding: 2px 6px;
-      border-radius: 6px;
+    .gc-hero-card-top .gc-card-title{
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .gc-hero-card-mid{
+      padding: 16px 18px 18px 18px;
+      background: var(--gc-green-2);
+      color: #fff;
+      text-align: center;
+    }
+    .gc-hero-card-mid p{
+      margin: 0;
+      font-size: 20px;
+      font-weight: 500;
+      line-height: 1.25;
+    }
+    .gc-hero-card-actions{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 14px;
+      background: rgba(0,0,0,0.28);
+    }
+    .gc-btn{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height: 44px;
+      border-radius: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.18);
+      transition: transform 0.08s ease, filter 0.08s ease;
+      user-select: none;
+      color: #fff;
+    }
+    .gc-btn:hover{ filter: brightness(1.03); }
+    .gc-btn:active{ transform: translateY(1px); }
+    .gc-btn-primary{ background: rgba(67,160,71,0.95); }
+    .gc-btn-secondary{ background: rgba(255,255,255,0.10); }
+
+    /* Footer */
+    .gc-footer{
+      background: var(--gc-footer);
+      padding: 14px 0 18px 0;
+      border-top: 1px solid rgba(0,0,0,0.08);
+    }
+    .gc-footer-inner{
+      width: min(1200px, calc(100% - 44px));
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 14px;
+      align-items: start;
+      color: var(--gc-footer-text);
+      font-size: 14px;
+    }
+
+    .gc-footer-left p,
+    .gc-footer-right p{ margin: 4px 0; }
+
+    .gc-footer a{
+      color: rgba(0,0,0,0.78);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .gc-footer .gc-mini-title{
+      font-weight: 800;
+      color: rgba(0,0,0,0.78);
+      letter-spacing: 0.02em;
+    }
+
+    .gc-footer-badges{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .gc-badge{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(0,0,0,0.10);
+      font-weight: 700;
+      font-size: 12.5px;
+      color: rgba(0,0,0,0.70);
+      text-decoration:none;
+    }
+
+    @media (max-width: 980px){
+      .gc-hero-inner{ grid-template-columns: 1fr; gap: 16px; }
+      .gc-hero-card{ justify-self: start; }
+      .gc-point{ grid-template-columns: 78px 1fr; }
+    }
+    @media (max-width: 720px){
+      .gc-nav{ display: none; }
+      .gc-footer-inner{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
 
-<body class="slides horizontal simplifiedMobile animated">
+<body>
+  <div class="gc-page">
 
-  <svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
-    <symbol id="logo" viewBox="-50 -10 300 120" preserveAspectRatio="xMidYMid meet">
-      <rect x="0" y="20" width="200" height="70" fill="#896900" rx="4" />
-      <text x="20" y="72" fill="#fff" font-family="Baskerville, 'Baskerville Old Face', serif" font-weight="700" font-size="48">
-        P A R C
-      </text>
-    </symbol>
-  </svg>
-
-  <!-- Header / Nav -->
-  <header class="banner">
-    <div class="banner-inner">
-      <a href="https://parccommons.org" class="logo-link" aria-label="PARC Home">
-        <svg class="banner-logo"><use xlink:href="#logo"></use></svg>
+    <header class="gc-topbar">
+      <a class="gc-brand" href="https://parccommons.org/">
+        <span class="gc-brand-badge">PARC</span>
       </a>
-      <nav class="nav-links">
-        <a href="https://parccommons.org/index.html">Home</a>
+      <nav class="gc-nav" aria-label="Primary">
+        <a href="https://parccommons.org/">Home</a>
         <a href="https://parccommons.org/about.html">About</a>
         <a href="https://parccommons.org/people.html">People</a>
-        <a href="https://parccommons.org/resources.html">Research</a>
-        <a href="https://parccommons.org/research.html">Collaborate</a>
+        <a href="https://parccommons.org/research.html">Research</a>
+        <a href="https://parccommons.org/collaborate.html">Collaborate</a>
       </nav>
-    </div>
-  </header>
+    </header>
 
-  <!-- Hero -->
-  <section class="slide hero-banner fade-6 kenBurns">
-    <div class="background" style="background-image:url('https://parccommons.org/assets/img/background/PARC_narrow.jpg')"></div>
-    <div class="overlay">
-      <div class="block">
-        <h1 style="text-align:left;margin-top:5%;">GroundControl<br></h1>
-      </div>
-        <h3 style="text-align:left;"><i>A <a href="https://parccommons.org"><u>PARC</u></a> platform for agricultural surveying, spatial analytics, and decision support</i></h3>
-    </div>
-  </section>
+    <section class="gc-hero" aria-label="GroundControl">
+      <div class="gc-hero-inner">
 
-  <!-- Secondary section styled like the main index -->
-  <section class="carousel-banner">
-    <div class="container">
-      <h3 class="section-title">Tools:</h3>
+        <div class="gc-hero-left">
+          <h1>GroundControl</h1>
+          <p class="gc-subtitle">
+            A PARC platform for agricultural surveying, spatial analytics, and decision support
+          </p>
 
-      <div class="carousel-shell" aria-label="GroundControl tools">
-        <button class="car-btn" id="carPrev" type="button" aria-label="Previous">&#8249;</button>
-
-        <div class="carousel-viewport" id="carViewport">
-          <div class="carousel-track" id="carouselTrack">
-
-            <!-- Cards use the same class name pattern as PARC initiatives -->
-            <a class="project-card" href="/RTK/" style="text-decoration:none;">
-              <div style="font-weight:700;">Live RTK</div>
-              <div style="opacity:.85; font-weight:400;">Realtime RTK fix viewer (websocket)</div>
-            </a>
-
-            <a class="project-card" href="/PostGIS/" style="text-decoration:none;">
-              <div style="font-weight:700;">PostGIS</div>
-              <div style="opacity:.85; font-weight:400;">Database health, spatial queries, and data products</div>
-            </a>
-
-            <a class="project-card" href="/public/" style="text-decoration:none;">
-              <div style="font-weight:700;">Public</div>
-              <div style="opacity:.85; font-weight:400;">Static viewers and shared artifacts (PLY, panoramas, VO outputs)</div>
-            </a>
-
+          <div class="gc-points" aria-label="Overview">
+            <div class="gc-point">
+              <div class="gc-k">What:</div>
+              <div class="gc-v">A web app for survey ingestion, mapping, and analysis.</div>
+            </div>
+            <div class="gc-point">
+              <div class="gc-k">Why:</div>
+              <div class="gc-v">
+                Open source, community-driven, modern, and designed to support multiple platforms
+                (<em>drones</em>, and other agricultural robots).
+              </div>
+            </div>
+            <div class="gc-point">
+              <div class="gc-k">For:</div>
+              <div class="gc-v">GIS surveyors, agronomists, growers, and researchers.</div>
+            </div>
           </div>
         </div>
 
-        <button class="car-btn" id="carNext" type="button" aria-label="Next">&#8250;</button>
+        <div class="gc-hero-card" role="region" aria-label="GroundControl call to action">
+          <div class="gc-hero-card-top">
+            <p class="gc-card-title">PARC GroundControl:</p>
+          </div>
+          <div class="gc-hero-card-mid">
+            <p>Decision support for<br/>integrated land management</p>
+          </div>
+          <div class="gc-hero-card-actions">
+            <a class="gc-btn gc-btn-primary" href="/PostGIS/">Try for free</a>
+            <a class="gc-btn gc-btn-secondary" href="https://parccommons.org/collaborate.html">Pricing</a>
+          </div>
+        </div>
+
       </div>
+    </section>
 
-      <div class="gc-note">
-        Served from <code>/srv/groundcontrol/ui/site_root/index.html</code>. Sections route via nginx <code>alias</code>.
+    <footer class="gc-footer" aria-label="Footer">
+      <div class="gc-footer-inner">
+        <div class="gc-footer-left">
+          <p class="gc-mini-title">By:</p>
+          <p>Precision Agronomy Research Center (PARC), a 501(c)(3)</p>
+
+          <p class="gc-mini-title" style="margin-top:10px;">Contact us:</p>
+          <p><a href="mailto:avinash@parccommons.org">avinash@parccommons.org</a></p>
+
+          <div class="gc-footer-badges" aria-label="Quick links">
+            <a class="gc-badge" href="/PostGIS/">PostGIS</a>
+            <a class="gc-badge" href="/public/">Public</a>
+            <a class="gc-badge" href="https://parccommons.org/collaborate.html">Collaborate</a>
+          </div>
+        </div>
+
+        <div class="gc-footer-right">
+          <p class="gc-mini-title">Notes:</p>
+          <p>Self-hostable deployment supported. Data stays with the operator by default.</p>
+          <p>Built for field workflows: imagery, orthos, point clouds, and spatial QA.</p>
+        </div>
       </div>
-    </div>
-  </section>
+    </footer>
 
-  <!-- Same carousel behavior as PARC -->
-  <script>
-    (function () {
-      const track = document.getElementById("carouselTrack");
-      const viewport = document.getElementById("carViewport");
-      const prevBtn = document.getElementById("carPrev");
-      const nextBtn = document.getElementById("carNext");
-      if (!track || !viewport) return;
-
-      let index = 0;
-      let timer = null;
-
-      function cards() { return Array.from(track.children); }
-
-      function stepPx() {
-        const first = cards()[0];
-        if (!first) return 0;
-        const gap = parseFloat(getComputedStyle(track).gap || "0") || 0;
-        return first.getBoundingClientRect().width + gap;
-      }
-
-      function maxIndex() { return Math.max(0, cards().length - 1); }
-      function clamp(i) { return Math.max(0, Math.min(maxIndex(), i)); }
-
-      function goTo(i, animate = true) {
-        index = clamp(i);
-        track.style.transition = animate ? "transform 420ms ease" : "none";
-        track.style.transform = `translateX(${-index * stepPx()}px)`;
-      }
-
-      function next() { const m = maxIndex(); goTo(index >= m ? 0 : index + 1); }
-      function prev() { const m = maxIndex(); goTo(index <= 0 ? m : index - 1); }
-
-      function startAuto() { stopAuto(); timer = setInterval(next, 4500); }
-      function stopAuto() { if (timer) clearInterval(timer); timer = null; }
-
-      if (nextBtn) nextBtn.addEventListener("click", () => { stopAuto(); next(); startAuto(); });
-      if (prevBtn) prevBtn.addEventListener("click", () => { stopAuto(); prev(); startAuto(); });
-
-      viewport.addEventListener("mouseenter", stopAuto);
-      viewport.addEventListener("mouseleave", startAuto);
-
-      window.addEventListener("resize", () => goTo(index, false));
-
-      goTo(0, false);
-      startAuto();
-    })();
-  </script>
-
+  </div>
 </body>
 </html>

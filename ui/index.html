@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>PARC | GroundControl</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700|Material+Icons" rel="stylesheet">
+  <!-- If these exist locally in /srv/groundcontrol/ui/css/, keep them.
+       If you are pulling PARC styles from parccommons.org elsewhere, swap these links accordingly. -->
+  <link rel="stylesheet" href="css/slides.css">
+  <link rel="stylesheet" href="css/index_custom.css">
+
+  <style>
+    :root{
+      --gc-green: rgba(44, 110, 46, 0.88);
+      --gc-green-2: rgba(44, 110, 46, 0.72);
+      --gc-cream: rgba(255,255,255,0.92);
+      --gc-shadow: 0 18px 45px rgba(0,0,0,0.28);
+      --gc-radius: 18px;
+    }
+
+    /* Layout container */
+    .gc-page{
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #eef2ee;
+    }
+
+    /* Top bar */
+    .gc-topbar{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      background: rgba(20,24,20,0.78);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .gc-brand{
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+
+    .gc-brand-badge{
+      background: #896900;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 4px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+    }
+
+    .gc-nav{
+      display: inline-flex;
+      gap: 18px;
+      align-items: center;
+      font-weight: 500;
+    }
+    .gc-nav a{
+      color: rgba(255,255,255,0.92);
+      text-decoration: none;
+      padding: 8px 8px;
+      border-radius: 10px;
+    }
+    .gc-nav a:hover{
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* HERO */
+    .gc-hero{
+      position: relative;
+      width: 100%;
+      min-height: clamp(420px, 70vh, 760px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #0c120d;
+    }
+
+    .gc-hero::before{
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: url("./groundcontrol_backsplash.png");
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      filter: saturate(1.05) contrast(1.05);
+      transform: scale(1.02);
+    }
+
+    .gc-hero::after{
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(900px 520px at 70% 45%, rgba(0,0,0,0.05), rgba(0,0,0,0.52)),
+        linear-gradient(to bottom, rgba(0,0,0,0.20), rgba(0,0,0,0.55));
+    }
+
+    .gc-hero-inner{
+      position: relative;
+      z-index: 2;
+      width: min(1200px, calc(100% - 44px));
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 26px;
+      align-items: center;
+      padding: 34px 0;
+    }
+
+    .gc-hero-left{
+      color: rgba(255,255,255,0.94);
+      padding: 10px 6px;
+    }
+
+    .gc-hero-left h1{
+      margin: 0 0 8px 0;
+      font-size: clamp(38px, 4.5vw, 68px);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      text-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+
+    .gc-hero-left .gc-subtitle{
+      margin: 0;
+      font-size: clamp(16px, 1.6vw, 22px);
+      font-weight: 300;
+      line-height: 1.35;
+      text-shadow: 0 6px 18px rgba(0,0,0,0.35);
+      opacity: 0.98;
+    }
+
+    .gc-hero-card{
+      justify-self: end;
+      width: min(520px, 100%);
+      border-radius: var(--gc-radius);
+      box-shadow: var(--gc-shadow);
+      overflow: hidden;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(6px);
+    }
+
+    .gc-hero-card-top{
+      padding: 18px 18px 14px 18px;
+      background: var(--gc-green);
+      color: #fff;
+      text-align: center;
+    }
+    .gc-hero-card-top .gc-card-title{
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .gc-hero-card-mid{
+      padding: 16px 18px 18px 18px;
+      background: rgba(44,110,46,0.86);
+      color: #fff;
+      text-align: center;
+    }
+    .gc-hero-card-mid p{
+      margin: 0;
+      font-size: 20px;
+      font-weight: 500;
+      line-height: 1.25;
+    }
+
+    .gc-hero-card-actions{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 14px;
+      background: rgba(0,0,0,0.28);
+    }
+
+    .gc-btn{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      border-radius: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.18);
+      transition: transform 0.08s ease, filter 0.08s ease, background 0.12s ease;
+      user-select: none;
+    }
+    .gc-btn:hover{ filter: brightness(1.03); }
+    .gc-btn:active{ transform: translateY(1px); }
+
+    .gc-btn-primary{
+      background: rgba(67, 160, 71, 0.95);
+      color: #fff;
+    }
+    .gc-btn-secondary{
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+    }
+
+    /* SECTION BELOW HERO */
+    .gc-section{
+      width: 100%;
+      padding: 34px 0 50px 0;
+      background: #cfe2d3;
+    }
+    .gc-section-inner{
+      width: min(1200px, calc(100% - 44px));
+      margin: 0 auto;
+    }
+    .gc-section h2{
+      margin: 0 0 18px 0;
+      font-size: 40px;
+      font-weight: 600;
+      color: #8a6b0a;
+      letter-spacing: -0.01em;
+    }
+
+    /* Tools cards (simple, no fancy banner) */
+    .gc-tools-row{
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+      margin-top: 10px;
+    }
+
+    .gc-card{
+      background: rgba(255,255,255,0.84);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.10);
+    }
+    .gc-card a{
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .gc-card h3{
+      margin: 0 0 8px 0;
+      font-size: 26px;
+      color: #8a6b0a;
+      font-weight: 700;
+    }
+    .gc-card p{
+      margin: 0;
+      color: rgba(0,0,0,0.62);
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .gc-hero-inner{
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .gc-hero-card{
+        justify-self: start;
+      }
+    }
+    @media (max-width: 720px){
+      .gc-nav{ display: none; }
+      .gc-tools-row{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="gc-page">
+
+    <header class="gc-topbar">
+      <a class="gc-brand" href="https://parccommons.org/">
+        <span class="gc-brand-badge">PARC</span>
+      </a>
+
+      <nav class="gc-nav" aria-label="Primary">
+        <a href="https://parccommons.org/">Home</a>
+        <a href="https://parccommons.org/about.html">About</a>
+        <a href="https://parccommons.org/people.html">People</a>
+        <a href="https://parccommons.org/research.html">Research</a>
+        <a href="https://parccommons.org/collaborate.html">Collaborate</a>
+      </nav>
+    </header>
+
+    <!-- HERO (replaces the old banner entirely) -->
+    <section class="gc-hero" aria-label="GroundControl">
+      <div class="gc-hero-inner">
+        <div class="gc-hero-left">
+          <h1>GroundControl</h1>
+          <p class="gc-subtitle">
+            A PARC platform for agricultural surveying, spatial analytics, and decision support
+          </p>
+        </div>
+
+        <div class="gc-hero-card" role="region" aria-label="GroundControl call to action">
+          <div class="gc-hero-card-top">
+            <p class="gc-card-title">PARC GroundControl:</p>
+          </div>
+          <div class="gc-hero-card-mid">
+            <p>Decision support for<br/>integrated land management</p>
+          </div>
+          <div class="gc-hero-card-actions">
+            <a class="gc-btn gc-btn-primary" href="./apps/postgis/index.html">Try for free</a>
+            <a class="gc-btn gc-btn-secondary" href="https://parccommons.org/collaborate.html">Pricing</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tools -->
+    <section class="gc-section" aria-label="Tools">
+      <div class="gc-section-inner">
+        <h2>Tools:</h2>
+
+        <div class="gc-tools-row">
+          <div class="gc-card">
+            <a href="./apps/postgis/index.html">
+              <h3>PostGIS</h3>
+              <p>Database health, spatial queries, and data products</p>
+            </a>
+          </div>
+
+          <div class="gc-card">
+            <a href="./public/index.html">
+              <h3>Public</h3>
+              <p>Static viewers and shared artifacts (PLY, panoramas, VO outputs)</p>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

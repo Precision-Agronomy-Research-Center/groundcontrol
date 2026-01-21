@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GroundControl | PARC</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700|Material+Icons" rel="stylesheet">
+  <!-- Pull the exact same CSS the main site uses -->
+  <link rel="stylesheet" href="https://parccommons.org/css/slides.css">
+  <link rel="stylesheet" href="https://parccommons.org/css/index_custom.css">
+
+  <style>
+    /* Keep local CSS minimal so PARC styles win */
+    .gc-subtitle { text-align:center; margin-top:-1%; }
+    .gc-note {
+      margin-top: 24px;
+      font-size: 14px;
+      opacity: 0.85;
+      text-align: center;
+    }
+    .gc-note code{
+      background: rgba(0,0,0,0.08);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+
+<body class="slides horizontal simplifiedMobile animated">
+
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
+    <symbol id="logo" viewBox="-50 -10 300 120" preserveAspectRatio="xMidYMid meet">
+      <rect x="0" y="20" width="200" height="70" fill="#896900" rx="4" />
+      <text x="20" y="72" fill="#fff" font-family="Baskerville, 'Baskerville Old Face', serif" font-weight="700" font-size="48">
+        P A R C
+      </text>
+    </symbol>
+  </svg>
+
+  <!-- Header / Nav -->
+  <header class="banner">
+    <div class="banner-inner">
+      <a href="https://parccommons.org" class="logo-link" aria-label="PARC Home">
+        <svg class="banner-logo"><use xlink:href="#logo"></use></svg>
+      </a>
+      <nav class="nav-links">
+        <a href="https://parccommons.org/index.html">Home</a>
+        <a href="https://parccommons.org/about.html">About</a>
+        <a href="https://parccommons.org/people.html">People</a>
+        <a href="https://parccommons.org/resources.html">Research</a>
+        <a href="https://parccommons.org/research.html">Collaborate</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="slide hero-banner fade-6 kenBurns">
+    <div class="background" style="background-image:url('https://parccommons.org/assets/img/background/PARC_narrow.jpg')"></div>
+    <div class="overlay">
+      <div class="block">
+        <h1 style="text-align:left;margin-top:5%;">GroundControl<br></h1>
+      </div>
+        <h3 style="text-align:left;"><i>A <a href="https://parccommons.org"><u>PARC</u></a> platform for agricultural surveying, spatial analytics, and decision support</i></h3>
+    </div>
+  </section>
+
+  <!-- Secondary section styled like the main index -->
+  <section class="carousel-banner">
+    <div class="container">
+      <h3 class="section-title">Tools:</h3>
+
+      <div class="carousel-shell" aria-label="GroundControl tools">
+        <button class="car-btn" id="carPrev" type="button" aria-label="Previous">&#8249;</button>
+
+        <div class="carousel-viewport" id="carViewport">
+          <div class="carousel-track" id="carouselTrack">
+
+            <!-- Cards use the same class name pattern as PARC initiatives -->
+            <a class="project-card" href="/RTK/" style="text-decoration:none;">
+              <div style="font-weight:700;">Live RTK</div>
+              <div style="opacity:.85; font-weight:400;">Realtime RTK fix viewer (websocket)</div>
+            </a>
+
+            <a class="project-card" href="/PostGIS/" style="text-decoration:none;">
+              <div style="font-weight:700;">PostGIS</div>
+              <div style="opacity:.85; font-weight:400;">Database health, spatial queries, and data products</div>
+            </a>
+
+            <a class="project-card" href="/public/" style="text-decoration:none;">
+              <div style="font-weight:700;">Public</div>
+              <div style="opacity:.85; font-weight:400;">Static viewers and shared artifacts (PLY, panoramas, VO outputs)</div>
+            </a>
+
+          </div>
+        </div>
+
+        <button class="car-btn" id="carNext" type="button" aria-label="Next">&#8250;</button>
+      </div>
+
+      <div class="gc-note">
+        Served from <code>/srv/groundcontrol/ui/site_root/index.html</code>. Sections route via nginx <code>alias</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- Same carousel behavior as PARC -->
+  <script>
+    (function () {
+      const track = document.getElementById("carouselTrack");
+      const viewport = document.getElementById("carViewport");
+      const prevBtn = document.getElementById("carPrev");
+      const nextBtn = document.getElementById("carNext");
+      if (!track || !viewport) return;
+
+      let index = 0;
+      let timer = null;
+
+      function cards() { return Array.from(track.children); }
+
+      function stepPx() {
+        const first = cards()[0];
+        if (!first) return 0;
+        const gap = parseFloat(getComputedStyle(track).gap || "0") || 0;
+        return first.getBoundingClientRect().width + gap;
+      }
+
+      function maxIndex() { return Math.max(0, cards().length - 1); }
+      function clamp(i) { return Math.max(0, Math.min(maxIndex(), i)); }
+
+      function goTo(i, animate = true) {
+        index = clamp(i);
+        track.style.transition = animate ? "transform 420ms ease" : "none";
+        track.style.transform = `translateX(${-index * stepPx()}px)`;
+      }
+
+      function next() { const m = maxIndex(); goTo(index >= m ? 0 : index + 1); }
+      function prev() { const m = maxIndex(); goTo(index <= 0 ? m : index - 1); }
+
+      function startAuto() { stopAuto(); timer = setInterval(next, 4500); }
+      function stopAuto() { if (timer) clearInterval(timer); timer = null; }
+
+      if (nextBtn) nextBtn.addEventListener("click", () => { stopAuto(); next(); startAuto(); });
+      if (prevBtn) prevBtn.addEventListener("click", () => { stopAuto(); prev(); startAuto(); });
+
+      viewport.addEventListener("mouseenter", stopAuto);
+      viewport.addEventListener("mouseleave", startAuto);
+
+      window.addEventListener("resize", () => goTo(index, false));
+
+      goTo(0, false);
+      startAuto();
+    })();
+  </script>
+
+</body>
+</html>
